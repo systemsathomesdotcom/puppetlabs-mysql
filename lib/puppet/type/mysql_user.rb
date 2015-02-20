@@ -37,6 +37,11 @@ Puppet::Type.newtype(:mysql_user) do
 
   newproperty(:password_hash) do
     desc 'The password hash of the user. Use mysql_password() for creating such a hash.'
+    newvalue(/\w*/)
+  end
+
+  newproperty(:plugin) do
+    desc 'The authentication plugin of the user.'
     newvalue(/\w+/)
   end
 

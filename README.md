@@ -138,9 +138,28 @@ To add custom MySQL configuration, drop additional files into
 
 ####mysql::server
 
+#####`create_root_user`
+
+Specify whether root user should be created or not. Defaults to 'true'.
+
+This is useful for a cluster setup with Galera. The root user has to
+be created once only. `create_root_user` can be set to 'true' on one node while
+it is set to 'false' on the remaining nodes.
+
+#####`create_root_my_cnf`
+
+If set to 'true' create `/root/.my.cnf`. Defaults to 'true'.
+
+`create_root_my_cnf` allows to create `/root/.my.cnf` independently of `create_root_user`.
+This can be used for a cluster setup with Galera where you want to have `/root/.my.cnf`
+on all nodes.
+
 #####`root_password`
 
 The MySQL root password.  Puppet will attempt to set the root password and update `/root/.my.cnf` with it.
+
+Has to be set if `create_root_user` or `create_root_my_cnf` are true. If `root_password` is 'UNSET' `create_root_user`
+and `create_root_my_cnf` are assumed to be false, i.e. the MySQL root user and `/root/.my.cnf` are not created.
 
 #####`old_root_password`
 
@@ -333,6 +352,34 @@ An array of two elements to set the backup time.  Allows ['23', '5'] or ['3', '4
 #####`postscript`
 
 A script that is executed at when the backup is finished. This could be used to (r)sync the backup to a central store. This script can be either a single line that is directly executed or a number of lines, when supplied as an array. It could also be one or more externally managed (executable) files.
+
+#####`provider`
+
+Set backup implementation
+
+* `mysqldump`
+* `mysqlbackup`: MySQL Enterprise Backup
+* `xtrabackup`: Percona XtraBackup
+
+####mysql::backup::mysqldump
+
+Implements mysql::server::backup with mysqldump
+
+Backup type: Logical
+
+####mysql::backup::mysqlbackup
+
+Implements mysql::server::backup with MySQL Enterprise Backup from Oracle
+
+Backup type: Physical
+
+For this you need the meb package, which is available in RPM and TAR format from Oracle. For Ubuntu you can use [meb-deb](https://github.com/dveeden/meb-deb) to create a package from an official tarball.
+
+####mysql::backup::xtrabackup
+
+Implements mysql::server::backup with XtraBackup from Percona
+
+Backup type: Physical
 
 ####mysql::server::monitor
 
@@ -537,6 +584,14 @@ mysql_user { 'root@127.0.0.1':
   max_queries_per_hour     => '0',
   max_updates_per_hour     => '0',
   max_user_connections     => '0',
+}
+```
+
+It is also possible to specify an authentication plugin.
+```
+mysql_user{ 'myuser'@'localhost':
+  ensure                   => 'present',
+  plugin                   => 'unix_socket',
 }
 ```
 
